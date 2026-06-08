@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 # Configuration
 UPLOAD_FOLDER = tempfile.gettempdir()
-ALLOWED_EXTENSIONS = {'dxf', 'dwg'}
+ALLOWED_EXTENSIONS = {'dxf'}
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -18,6 +18,26 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def parse_utm_zone(utm_zone_str):
+    """Parse e.g. '42N' or '5S' into an EPSG code string. Returns None if invalid."""
+    if not utm_zone_str:
+        return None
+    s = utm_zone_str.strip().upper()
+    if len(s) < 2:
+        return None
+    hemisphere = s[-1]
+    if hemisphere not in ('N', 'S'):
+        return None
+    try:
+        zone = int(s[:-1])
+    except ValueError:
+        return None
+    if not (1 <= zone <= 60):
+        return None
+    epsg_num = 32600 + zone if hemisphere == 'N' else 32700 + zone
+    return f"EPSG:{epsg_num}"
 
 
 @app.route('/')
@@ -50,19 +70,25 @@ def convert():
         if direction not in {'forward', 'reverse'}:
             return jsonify({'success': False, 'message': 'Invalid conversion direction'}), 400
 
+        source_epsg = parse_utm_zone(request.form.get('utm_zone', '42N'))
+        if not source_epsg:
+            return jsonify({'success': False, 'message': 'Invalid UTM zone. Use format like 42N or 5S.'}), 400
+
         filename = secure_filename(file.filename)
         input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(input_path)
 
         base, ext = os.path.splitext(filename)
-        suffix = "_UTM42N" if direction == 'reverse' else "_LATLONG"
+        zone_label = request.form.get('utm_zone', '42N').upper()
+        suffix = f"_UTM{zone_label}" if direction == 'reverse' else "_LATLONG"
         output_filename = f"{base}{suffix}{ext}"
         output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
 
         success, message, result_path = convert_dxf_file(
             input_path,
             output_path,
-            reverse=(direction == 'reverse')
+            reverse=(direction == 'reverse'),
+            source_epsg=source_epsg
         )
 
         if not success:
@@ -128,6 +154,10 @@ def convert_to_kml():
         if input_crs not in {'latlong', 'utm'}:
             return jsonify({'success': False, 'message': 'Invalid input CRS'}), 400
 
+        source_epsg = parse_utm_zone(request.form.get('utm_zone', '42N'))
+        if not source_epsg:
+            return jsonify({'success': False, 'message': 'Invalid UTM zone. Use format like 42N or 5S.'}), 400
+
         filename = secure_filename(file.filename)
         if not filename:
             filename = f"{uuid.uuid4().hex}{os.path.splitext(file.filename)[1].lower()}"
@@ -159,7 +189,7 @@ def convert_to_kml():
         output_filename = f"{base}.kml"
         output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
 
-        success, message, _ = dxf_to_kml(dxf_input, output_path, is_utm_input=(input_crs == 'utm'))
+        success, message, _ = dxf_to_kml(dxf_input, output_path, is_utm_input=(input_crs == 'utm'), source_epsg=source_epsg)
 
         if not success:
             return jsonify({'success': False, 'message': message}), 400
@@ -191,8 +221,8 @@ def convert_to_kml():
 def info():
     """Get conversion information"""
     return jsonify({
-        'forward_conversion': 'EPSG:32642 (UTM Zone 42N - Meters) -> EPSG:4326 (WGS84 - Degrees)',
-        'reverse_conversion': 'EPSG:4326 (WGS84 - Degrees) -> EPSG:32642 (UTM Zone 42N - Meters)',
+        'forward_conversion': 'UTM Zone (selectable) -> EPSG:4326 (WGS84 - Degrees)',
+        'reverse_conversion': 'EPSG:4326 (WGS84 - Degrees) -> UTM Zone (selectable)',
         'supported_entities': [
             'POINT',
             'TEXT',

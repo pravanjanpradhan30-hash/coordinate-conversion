@@ -4,14 +4,8 @@ import os
 import math
 import ctypes
 
-SOURCE_EPSG = "EPSG:32642"  # UTM Zone 42N (meters)
-TARGET_EPSG = "EPSG:4326"   # WGS84 (degrees)
-OUTPUT_SUFFIX = "_LATLONG"
-REVERSE_OUTPUT_SUFFIX = "_UTM42N"
+TARGET_EPSG = "EPSG:4326"   # WGS84 (degrees) — always fixed
 ROUND_DIGITS = 8
-
-forward_transformer = Transformer.from_crs(SOURCE_EPSG, TARGET_EPSG, always_xy=True)
-reverse_transformer = Transformer.from_crs(TARGET_EPSG, SOURCE_EPSG, always_xy=True)
 
 
 def _expand_long_path(path):
@@ -69,22 +63,24 @@ def dwg_to_dxf(dwg_path, dxf_path):
                 pass
 
 
-def utm_to_latlon(x, y):
+def utm_to_latlon(x, y, source_epsg="EPSG:32642"):
     """Convert UTM coordinates to latitude/longitude"""
-    lon, lat = forward_transformer.transform(x, y)
+    t = Transformer.from_crs(source_epsg, TARGET_EPSG, always_xy=True)
+    lon, lat = t.transform(x, y)
     return round(lon, ROUND_DIGITS), round(lat, ROUND_DIGITS)
 
 
-def latlon_to_utm(x, y):
+def latlon_to_utm(x, y, source_epsg="EPSG:32642"):
     """Convert longitude/latitude to UTM coordinates"""
-    utm_x, utm_y = reverse_transformer.transform(x, y)
+    t = Transformer.from_crs(TARGET_EPSG, source_epsg, always_xy=True)
+    utm_x, utm_y = t.transform(x, y)
     return round(utm_x, ROUND_DIGITS), round(utm_y, ROUND_DIGITS)
 
 
-def transform_xy(x, y, reverse=False):
+def transform_xy(x, y, reverse=False, source_epsg="EPSG:32642"):
     if reverse:
-        return latlon_to_utm(x, y)
-    return utm_to_latlon(x, y)
+        return latlon_to_utm(x, y, source_epsg)
+    return utm_to_latlon(x, y, source_epsg)
 
 
 def copy_linetypes(source_doc, target_doc):
@@ -126,30 +122,29 @@ def copy_layer_properties(source_layer, target_layer):
             pass
 
 
-def convert_dxf_file(input_file, output_file=None, reverse=False):
+def convert_dxf_file(input_file, output_file=None, reverse=False, source_epsg="EPSG:32642"):
     """
-    Convert a DXF file from UTM (meters) to WGS84 (degrees)
-    
+    Convert a DXF file between UTM and WGS84.
+
     Args:
         input_file: Path to input DXF file
         output_file: Path to output DXF file (if None, creates one with suffix)
-    
+        reverse: If True, convert Lat/Long -> UTM; else UTM -> Lat/Long
+        source_epsg: EPSG code of the UTM zone (e.g. "EPSG:32642")
+
     Returns:
         Tuple of (success, message, output_file_path)
     """
     try:
-        # Validate input file
         if not os.path.exists(input_file):
             return False, f"Input file not found: {input_file}", None
-        
-        # Load the DXF file
+
         doc = ezdxf.readfile(input_file)
         msp = doc.modelspace()
-        
-        # Create output filename if not provided
+
         if output_file is None:
             base, ext = os.path.splitext(input_file)
-            suffix = REVERSE_OUTPUT_SUFFIX if reverse else OUTPUT_SUFFIX
+            suffix = "_UTM" if reverse else "_LATLONG"
             output_file = f"{base}{suffix}{ext}"
         
         # Create output document with same settings
@@ -182,14 +177,14 @@ def convert_dxf_file(input_file, output_file=None, reverse=False):
                 
                 if entity.dxftype() == 'POINT':
                     x, y, z = entity.dxf.location
-                    new_x, new_y = transform_xy(x, y, reverse=reverse)
+                    new_x, new_y = transform_xy(x, y, reverse=reverse, source_epsg=source_epsg)
                     new_entity = output_msp.add_point((new_x, new_y, z))
                     new_entity.dxf.layer = entity.dxf.layer
                     created_count += 1
                 
                 elif entity.dxftype() == 'TEXT':
                     x, y, z = entity.dxf.insert
-                    new_x, new_y = transform_xy(x, y, reverse=reverse)
+                    new_x, new_y = transform_xy(x, y, reverse=reverse, source_epsg=source_epsg)
                     new_entity = output_msp.add_text(
                         entity.dxf.text,
                         dxfattribs={
@@ -215,7 +210,7 @@ def convert_dxf_file(input_file, output_file=None, reverse=False):
                     for point in points:
                         x, y = point[0], point[1]
                         z = point[2] if len(point) > 2 else 0
-                        new_x, new_y = transform_xy(x, y, reverse=reverse)
+                        new_x, new_y = transform_xy(x, y, reverse=reverse, source_epsg=source_epsg)
                         new_points.append((new_x, new_y, z))
                     new_entity = output_msp.add_lwpolyline(new_points)
                     new_entity.dxf.layer = entity.dxf.layer
@@ -232,7 +227,7 @@ def convert_dxf_file(input_file, output_file=None, reverse=False):
                     for point in points:
                         x, y = point[0], point[1]
                         z = point[2] if len(point) > 2 else 0
-                        new_x, new_y = transform_xy(x, y, reverse=reverse)
+                        new_x, new_y = transform_xy(x, y, reverse=reverse, source_epsg=source_epsg)
                         new_points.append((new_x, new_y, z))
                     new_entity = output_msp.add_lwpolyline(new_points)
                     new_entity.dxf.layer = entity.dxf.layer
@@ -240,7 +235,7 @@ def convert_dxf_file(input_file, output_file=None, reverse=False):
                 
                 elif entity.dxftype() == 'CIRCLE':
                     x, y, z = entity.dxf.center
-                    new_x, new_y = transform_xy(x, y, reverse=reverse)
+                    new_x, new_y = transform_xy(x, y, reverse=reverse, source_epsg=source_epsg)
                     radius = entity.dxf.radius
                     new_entity = output_msp.add_circle((new_x, new_y, z), radius)
                     new_entity.dxf.layer = entity.dxf.layer
@@ -248,7 +243,7 @@ def convert_dxf_file(input_file, output_file=None, reverse=False):
                 
                 elif entity.dxftype() == 'ARC':
                     x, y, z = entity.dxf.center
-                    new_x, new_y = transform_xy(x, y, reverse=reverse)
+                    new_x, new_y = transform_xy(x, y, reverse=reverse, source_epsg=source_epsg)
                     new_entity = output_msp.add_arc(
                         (new_x, new_y, z),
                         radius=entity.dxf.radius,
@@ -324,14 +319,15 @@ def generate_kml(layers, doc_name):
     return '\n'.join(lines)
 
 
-def dxf_to_kml(input_file, output_file=None, is_utm_input=False):
+def dxf_to_kml(input_file, output_file=None, is_utm_input=False, source_epsg="EPSG:32642"):
     """
     Export a DXF file as KML.
 
     Args:
         input_file: Path to input DXF file
         output_file: Path to output KML file (default: same name with .kml extension)
-        is_utm_input: True if DXF coordinates are UTM Zone 42N (will convert to lat/long)
+        is_utm_input: True if DXF coordinates are in UTM (will convert to lat/long)
+        source_epsg: EPSG code of the UTM zone (e.g. "EPSG:32642")
 
     Returns:
         Tuple of (success, message, output_file_path)
@@ -353,7 +349,7 @@ def dxf_to_kml(input_file, output_file=None, is_utm_input=False):
 
         def to_lonlat(x, y):
             if is_utm_input:
-                return utm_to_latlon(x, y)
+                return utm_to_latlon(x, y, source_epsg)
             return x, y
 
         for entity in msp:
