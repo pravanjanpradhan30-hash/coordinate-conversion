@@ -1,5 +1,5 @@
 Flask==2.3.3
 Werkzeug==2.3.7
 pyproj==3.6.1
-ezdxf==1.9.16
+ezdxf==1.4.4
 gunicorn==21.2.0
