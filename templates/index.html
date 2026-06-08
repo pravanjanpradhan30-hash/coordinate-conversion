@@ -3,762 +3,829 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DXF Coordinate Converter</title>
+    <title>GeoDXF · Coordinate Studio</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --purple: #7C3AED;
+            --purple-mid: #8B5CF6;
+            --purple-light: #EDE9FE;
+            --purple-border: #DDD6FE;
+            --purple-text: #6D28D9;
+            --gray-100: #F9FAFB;
+            --gray-200: #F3F4F6;
+            --gray-300: #E5E7EB;
+            --gray-500: #6B7280;
+            --gray-700: #374151;
+            --gray-900: #111827;
         }
 
-        html, body {
-            height: 100%;
-        }
+        html, body { height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 16px;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
+        body { display: flex; height: 100vh; overflow: hidden; background: #F5F5F7; }
 
-        /* LEFT PANEL */
+        /* ── LEFT PANEL ── */
         .left-panel {
-            width: 380px;
-            min-width: 340px;
-            background: linear-gradient(160deg, #667eea 0%, #764ba2 100%);
+            width: 270px;
+            min-width: 270px;
+            background: linear-gradient(160deg, #5B21B6 0%, #7C3AED 60%, #8B5CF6 100%);
             color: white;
             display: flex;
             flex-direction: column;
-            padding: 48px 36px;
+            padding: 24px 20px;
             overflow-y: auto;
-        }
-
-        .brand-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        .brand h1 {
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            line-height: 1.3;
-        }
-
-        .brand p {
-            font-size: 14px;
-            opacity: 0.8;
-            line-height: 1.6;
-            margin-bottom: 40px;
-        }
-
-        .info-section {
-            background: rgba(255, 255, 255, 0.12);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-
-        .info-section h3 {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.7;
-            margin-bottom: 14px;
-        }
-
-        .info-row {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .info-item {
-            font-size: 13px;
-            line-height: 1.5;
-            opacity: 0.9;
-        }
-
-        .info-item strong {
-            display: block;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            opacity: 0.65;
-            margin-bottom: 2px;
-        }
-
-        .entities-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        }
-
-        .entity-tag {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 10px;
-            border-radius: 6px;
-            font-size: 13px;
-            text-align: center;
-        }
-
-        .precision-badge {
-            margin-top: auto;
-            padding-top: 32px;
-            font-size: 13px;
-            opacity: 0.6;
-        }
-
-        /* RIGHT PANEL */
-        .right-panel {
-            flex: 1;
-            background: #f4f6fb;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-
-        .right-header {
-            background: white;
-            padding: 24px 40px;
-            border-bottom: 1px solid #e8ecf0;
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .right-content {
-            flex: 1;
-            padding: 32px 40px;
-            display: flex;
-            flex-direction: column;
             gap: 20px;
         }
 
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 24px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+        .logo-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 4px;
         }
 
-        .card-title {
-            font-size: 13px;
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+        }
+
+        .logo-text { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; }
+        .logo-sub { font-size: 11px; opacity: 0.65; margin-top: 1px; }
+
+        .left-heading {
+            font-size: 20px;
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #888;
+            line-height: 1.35;
+        }
+
+        .left-sub {
+            font-size: 12px;
+            opacity: 0.7;
+            line-height: 1.6;
+            margin-top: -10px;
+        }
+
+        .info-list { display: flex; flex-direction: column; gap: 14px; }
+
+        .info-item {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .info-icon {
+            width: 28px; height: 28px; min-width: 28px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px;
+            margin-top: 1px;
+        }
+
+        .info-label { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+        .info-desc { font-size: 11px; opacity: 0.65; line-height: 1.4; }
+
+        .divider { border: none; border-top: 1px solid rgba(255,255,255,0.15); }
+
+        .entities-section { }
+        .entities-header {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.8px; opacity: 0.7; margin-bottom: 10px;
+        }
+
+        .entities-grid {
+            display: flex; flex-wrap: wrap; gap: 6px;
+        }
+
+        .entity-tag {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 4px 9px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .left-footer {
+            margin-top: auto;
+            font-size: 11px;
+            opacity: 0.45;
+            padding-top: 8px;
+        }
+
+        /* ── RIGHT PANEL ── */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background: #F5F5F7;
+        }
+
+        .right-header {
+            padding: 24px 36px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .page-title { font-size: 22px; font-weight: 700; color: var(--gray-900); }
+        .page-subtitle { font-size: 13px; color: var(--purple); margin-top: 3px; }
+
+        .right-content {
+            padding: 20px 36px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* ── SECTION CARD ── */
+        .cards-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .cards-row .section-card {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--gray-300);
+            padding: 20px 24px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 16px;
         }
 
-        .utm-zone-row {
+        .section-title-row {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 10px;
+        }
+
+        .section-badge {
+            width: 24px; height: 24px;
+            background: var(--gray-900);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .section-name {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--gray-700);
+        }
+
+        .section-hint {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        /* ── OPTION CARDS ── */
+        .option-row { display: flex; gap: 12px; }
+
+        .option-card {
+            flex: 1;
+            border: 2px solid var(--gray-300);
+            border-radius: 10px;
+            padding: 14px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.15s ease;
+            background: white;
+            position: relative;
+        }
+
+        .option-card.selected {
+            border-color: var(--purple);
+            background: var(--purple-light);
+        }
+
+        .option-card input[type="radio"] {
+            position: absolute;
+            top: 12px; right: 12px;
+            accent-color: var(--purple);
+            width: 16px; height: 16px;
+        }
+
+        .option-icon {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            background: var(--gray-200);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .option-card.selected .option-icon {
+            background: var(--purple-border);
+        }
+
+        .option-title { font-size: 14px; font-weight: 600; color: var(--gray-900); }
+        .option-desc { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+        .option-badge {
+            font-size: 10px;
+            font-weight: 700;
+            background: #D1FAE5;
+            color: #065F46;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* ── UTM ZONE ── */
+        .utm-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             flex-wrap: wrap;
         }
 
-        .utm-zone-row label {
-            font-size: 14px;
-            color: #555;
-            font-weight: 500;
-        }
+        .utm-label-group { display: flex; flex-direction: column; }
+        .utm-label { font-size: 12px; font-weight: 600; color: var(--gray-700); }
+        .utm-hint { font-size: 11px; color: var(--gray-500); }
 
-        .utm-zone-row select {
+        .utm-select {
             padding: 8px 12px;
-            border: 2px solid #e8ecf0;
+            border: 2px solid var(--gray-300);
             border-radius: 8px;
-            font-size: 15px;
-            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-900);
             background: white;
             cursor: pointer;
-            accent-color: #667eea;
             outline: none;
+            min-width: 120px;
         }
 
-        .utm-zone-row select:focus {
-            border-color: #667eea;
-        }
+        .utm-select:focus { border-color: var(--purple); }
 
-        .utm-zone-row .hemisphere-opts {
-            display: flex;
-            gap: 12px;
-        }
+        .hemi-toggle { display: flex; gap: 6px; }
 
-        .utm-zone-row .hemisphere-opts label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
+        .hemi-btn {
             padding: 8px 16px;
             border-radius: 8px;
-            border: 2px solid #e8ecf0;
-            transition: all 0.2s ease;
-        }
-
-        .utm-zone-row .hemisphere-opts label:has(input:checked) {
-            border-color: #667eea;
-            background: #f0f4ff;
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .epsg-preview {
+            border: 2px solid var(--gray-300);
             font-size: 13px;
-            color: #888;
-            margin-top: 12px;
-            background: #f4f6fb;
-            padding: 8px 12px;
-            border-radius: 6px;
-        }
-
-        .epsg-preview span {
             font-weight: 600;
-            color: #667eea;
-        }
-
-        .direction-options {
-            display: flex;
-            gap: 24px;
-        }
-
-        .direction-options label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 15px;
-            color: #444;
             cursor: pointer;
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: 2px solid #e8ecf0;
-            transition: all 0.2s ease;
-            flex: 1;
+            background: white;
+            color: var(--gray-700);
+            transition: all 0.15s ease;
         }
 
-        .direction-options label:has(input:checked) {
-            border-color: #667eea;
-            background: #f0f4ff;
-            color: #667eea;
-            font-weight: 600;
+        .hemi-btn.active {
+            background: var(--purple);
+            border-color: var(--purple);
+            color: white;
         }
 
-        .direction-options input[type="radio"] {
-            accent-color: #667eea;
-            width: 16px;
-            height: 16px;
+        .epsg-row {
+            margin-top: 12px;
+            padding: 9px 14px;
+            background: var(--gray-100);
+            border-radius: 7px;
+            font-size: 12px;
+            color: var(--gray-500);
         }
 
+        .epsg-row .epsg-val { font-weight: 700; color: var(--purple); }
+
+        /* ── UPLOAD AREA ── */
         .upload-area {
-            border: 2px dashed #c5d0f5;
+            border: 2px dashed var(--gray-300);
             border-radius: 10px;
-            padding: 48px 20px;
+            padding: 40px 20px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.25s ease;
-            background: #f9faff;
+            transition: all 0.2s ease;
+            background: var(--gray-100);
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .upload-area:hover {
-            border-color: #667eea;
-            background: #f0f4ff;
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--purple);
+            background: var(--purple-light);
         }
 
-        .upload-area.dragover {
-            border-color: #764ba2;
-            background: #e8ecff;
-            transform: scale(1.01);
+        .upload-cloud {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            border: 2px solid var(--purple-border);
+            background: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            margin-bottom: 4px;
+            color: var(--purple);
         }
 
-        .upload-icon {
-            font-size: 44px;
-        }
+        .upload-title { font-size: 14px; font-weight: 600; color: var(--gray-900); }
+        .upload-sub { font-size: 12px; color: var(--gray-500); }
+        .upload-ext { font-size: 11px; font-weight: 700; color: var(--gray-500); letter-spacing: 0.5px; margin-top: 4px; }
 
-        .upload-area p {
-            color: #555;
-            font-size: 15px;
-        }
-
-        .upload-area .hint {
-            font-size: 13px;
-            color: #aaa;
-        }
-
-        #fileInput {
-            display: none;
-        }
+        #fileInput { display: none; }
 
         .file-info {
-            background: #f0f4ff;
-            border: 1px solid #d4dcff;
-            padding: 14px 18px;
-            border-radius: 8px;
             display: none;
-        }
-
-        .file-info.show {
-            display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: var(--purple-light);
+            border: 1px solid var(--purple-border);
+            border-radius: 8px;
         }
 
-        .file-name {
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-            word-break: break-all;
-        }
+        .file-info.show { display: flex; }
+        .file-name { font-size: 13px; font-weight: 600; color: var(--gray-900); word-break: break-all; }
+        .file-size { font-size: 12px; color: var(--gray-500); }
 
-        .file-size {
-            color: #999;
-            font-size: 13px;
-            margin-top: 2px;
-        }
-
+        /* ── PROGRESS ── */
         .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: #e0e0e0;
-            border-radius: 2px;
-            display: none;
-            overflow: hidden;
+            height: 3px; background: var(--gray-300);
+            border-radius: 2px; display: none; overflow: hidden;
         }
-
-        .progress-bar.show {
-            display: block;
-        }
-
+        .progress-bar.show { display: block; }
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 2px;
-            animation: progress 2s ease-in-out infinite;
+            background: linear-gradient(90deg, var(--purple), var(--purple-mid));
+            animation: prog 2s ease-in-out infinite;
         }
+        @keyframes prog { 0%{width:0%} 50%{width:70%} 100%{width:100%} }
 
-        @keyframes progress {
-            0% { width: 0%; }
-            50% { width: 70%; }
-            100% { width: 100%; }
-        }
-
+        /* ── MESSAGE ── */
         .message {
-            padding: 16px 18px;
+            padding: 14px 16px;
             border-radius: 8px;
             display: none;
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.6;
         }
-
         .message.show { display: block; }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .message.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
+        .message.success { background: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0; }
+        .message.error   { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+        .message.info    { background: #DBEAFE; color: #1E40AF; border: 1px solid #BFDBFE; }
 
         .download-link {
-            display: block;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 6px;
-            text-decoration: none;
-            margin-top: 12px;
-            font-weight: 600;
-            font-size: 14px;
+            display: block; text-align: center;
+            background: var(--purple);
+            color: white; padding: 12px 20px;
+            border-radius: 8px; text-decoration: none;
+            margin-top: 10px; font-weight: 600;
             transition: all 0.2s ease;
         }
+        .download-link:hover { background: var(--purple-text); }
 
-        .download-link:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .button-group {
+        /* ── ACTION BAR ── */
+        .action-bar {
             display: flex;
-            gap: 12px;
+            gap: 10px;
+            align-items: center;
+            padding: 0 36px 32px;
         }
 
         .btn-convert {
             flex: 1;
             padding: 14px 24px;
+            background: var(--purple);
+            color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             transition: all 0.2s ease;
         }
 
-        .btn-convert:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-convert:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-        }
-
-        .btn-convert.loading {
-            pointer-events: none;
-            opacity: 0.8;
-        }
+        .btn-convert:hover:not(:disabled) { background: var(--purple-text); }
+        .btn-convert:disabled { opacity: 0.45; cursor: not-allowed; }
 
         .btn-clear {
-            padding: 14px 28px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
+            padding: 14px 20px;
+            background: white;
+            color: var(--gray-700);
+            border: 2px solid var(--gray-300);
+            border-radius: 10px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            background: white;
-            color: #555;
-            transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 6px;
+            transition: all 0.15s ease;
         }
+        .btn-clear:hover { border-color: var(--gray-500); }
 
-        .btn-clear:hover {
-            background: #f5f5f5;
-            border-color: #ccc;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <!-- LEFT PANEL -->
-    <div class="left-panel">
-        <div class="brand-icon">🗺️</div>
-        <div class="brand">
-            <h1>DXF Coordinate Converter</h1>
-            <p>Convert DXF files between any UTM Zone and WGS84 coordinate systems, or export to KML for Google Earth.</p>
+<!-- ══ LEFT PANEL ══ -->
+<div class="left-panel">
+    <div class="logo-row">
+        <div class="logo-icon">🗺️</div>
+        <div>
+            <div class="logo-text">GEODXF</div>
+            <div class="logo-sub">Coordinate Studio</div>
         </div>
-
-        <div class="info-section">
-            <h3>Conversions</h3>
-            <div class="info-row">
-                <div class="info-item">
-                    <strong>DXF Forward</strong>
-                    UTM Zone (any) → WGS84 (EPSG:4326)
-                </div>
-                <div class="info-item">
-                    <strong>DXF Reverse</strong>
-                    WGS84 (EPSG:4326) → UTM Zone (any)
-                </div>
-                <div class="info-item">
-                    <strong>KML Export</strong>
-                    DXF (UTM or Lat/Long) → KML for Google Earth
-                </div>
-            </div>
-        </div>
-
-        <div class="info-section">
-            <h3>Supported Entities</h3>
-            <div class="entities-grid">
-                <div class="entity-tag">POINT</div>
-                <div class="entity-tag">TEXT</div>
-                <div class="entity-tag">LINE</div>
-                <div class="entity-tag">LWPOLYLINE</div>
-                <div class="entity-tag">POLYLINE</div>
-                <div class="entity-tag">CIRCLE</div>
-                <div class="entity-tag">ARC</div>
-            </div>
-        </div>
-
-        <div class="precision-badge">Precision: 8 decimal places</div>
     </div>
 
-    <!-- RIGHT PANEL -->
-    <div class="right-panel">
-        <div class="right-header">Convert Your DXF File</div>
+    <div class="left-heading">Convert DXF files between coordinate systems</div>
+    <div class="left-sub">Transform geometry between any UTM Zone and WGS84, or export to KML for Google Earth — all in your browser.</div>
 
-        <div class="right-content">
-
-            <!-- Output Format -->
-            <div class="card">
-                <div class="card-title">Output Format</div>
-                <div class="direction-options">
-                    <label>
-                        <input type="radio" name="output_format" value="dxf" checked>
-                        DXF File
-                    </label>
-                    <label>
-                        <input type="radio" name="output_format" value="kml">
-                        KML (Google Earth)
-                    </label>
-                </div>
+    <div class="info-list">
+        <div class="info-item">
+            <div class="info-icon">→</div>
+            <div>
+                <div class="info-label">DXF Forward</div>
+                <div class="info-desc">UTM Zone (any) → WGS84 (EPSG:4326)</div>
             </div>
-
-            <!-- UTM Zone Selector -->
-            <div class="card">
-                <div class="card-title">UTM Zone</div>
-                <div class="utm-zone-row">
-                    <label>Zone Number:</label>
-                    <select id="utmZoneNumber">
-                        <!-- populated by JS -->
-                    </select>
-                    <div class="hemisphere-opts">
-                        <label>
-                            <input type="radio" name="hemisphere" value="N" checked> N (Northern)
-                        </label>
-                        <label>
-                            <input type="radio" name="hemisphere" value="S"> S (Southern)
-                        </label>
-                    </div>
-                </div>
-                <div class="epsg-preview" id="epsgPreview">
-                    Selected: <span>EPSG:32642</span> (UTM Zone 42N) ↔ EPSG:4326 (WGS84)
-                </div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon">←</div>
+            <div>
+                <div class="info-label">DXF Reverse</div>
+                <div class="info-desc">WGS84 → UTM Zone (any)</div>
             </div>
-
-            <!-- Conversion Direction -->
-            <div class="card" id="directionBox">
-                <div class="card-title">Conversion Direction</div>
-                <div class="direction-options">
-                    <label>
-                        <input type="radio" name="direction" value="forward" checked>
-                        UTM → Lat/Long
-                    </label>
-                    <label>
-                        <input type="radio" name="direction" value="reverse">
-                        Lat/Long → UTM
-                    </label>
-                </div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon">↓</div>
+            <div>
+                <div class="info-label">KML Export</div>
+                <div class="info-desc">DXF → KML for Google Earth</div>
             </div>
-
-            <!-- KML CRS (hidden by default) -->
-            <div class="card" id="kmlCrsBox" style="display:none">
-                <div class="card-title">Input Coordinate System</div>
-                <div class="direction-options">
-                    <label>
-                        <input type="radio" name="input_crs" value="utm" checked>
-                        <span id="kmlUtmLabel">UTM Zone 42N</span>
-                    </label>
-                    <label>
-                        <input type="radio" name="input_crs" value="latlong">
-                        Lat/Long (WGS84)
-                    </label>
-                </div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon">🔒</div>
+            <div>
+                <div class="info-label">Privacy First</div>
+                <div class="info-desc">Processing happens locally in your browser</div>
             </div>
+        </div>
+    </div>
 
-            <!-- Upload -->
-            <div class="card">
-                <div class="card-title">Upload File</div>
-                <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon">📄</div>
-                    <p>Click or drag a DXF file here</p>
-                    <p class="hint">Maximum file size: 50MB</p>
+    <hr class="divider">
+
+    <div class="entities-section">
+        <div class="entities-header">✦ Supported Entities</div>
+        <div class="entities-grid">
+            <div class="entity-tag">POINT</div>
+            <div class="entity-tag">TEXT</div>
+            <div class="entity-tag">LINE</div>
+            <div class="entity-tag">LWPOLYLINE</div>
+            <div class="entity-tag">POLYLINE</div>
+            <div class="entity-tag">CIRCLE</div>
+            <div class="entity-tag">ARC</div>
+            <div class="entity-tag">INSERT</div>
+        </div>
+    </div>
+
+    <div class="left-footer">Precision: 8 decimal places · v2.4</div>
+</div>
+
+<!-- ══ RIGHT PANEL ══ -->
+<div class="right-panel">
+    <div class="right-header">
+        <div>
+            <div class="page-title">New conversion</div>
+            <div class="page-subtitle">Configure your projection, then upload a DXF file to begin.</div>
+        </div>
+    </div>
+
+    <div class="right-content">
+
+        <!-- ROW: Output Format + Conversion Direction/CRS -->
+        <div class="cards-row">
+
+        <!-- 1. OUTPUT FORMAT -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title-row">
+                    <div class="section-badge">1</div>
+                    <div class="section-name">Output Format</div>
                 </div>
-                <input type="file" id="fileInput" accept=".dxf">
-
-                <div class="file-info" id="fileInfo" style="margin-top:16px">
+                <div class="section-hint">What to produce</div>
+            </div>
+            <div class="option-row">
+                <label class="option-card selected" id="fmtDxfCard">
+                    <input type="radio" name="output_format" value="dxf" checked>
+                    <div class="option-icon">📐</div>
                     <div>
-                        <div class="file-name" id="fileName"></div>
-                        <div class="file-size" id="fileSize"></div>
+                        <div class="option-title">DXF File</div>
+                        <div class="option-desc">Re-projected CAD drawing</div>
                     </div>
+                </label>
+                <label class="option-card" id="fmtKmlCard">
+                    <input type="radio" name="output_format" value="kml">
+                    <div class="option-icon">🌍</div>
+                    <div>
+                        <div class="option-title">KML <span class="option-badge">Google Earth</span></div>
+                        <div class="option-desc">Open directly in Google Earth</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- 2. CONVERSION DIRECTION (DXF only) -->
+        <div class="section-card" id="directionBox">
+            <div class="section-header">
+                <div class="section-title-row">
+                    <div class="section-badge">2</div>
+                    <div class="section-name">Conversion Direction</div>
+                </div>
+                <div class="section-hint">Which way to transform</div>
+            </div>
+            <div class="option-row">
+                <label class="option-card selected" id="dirFwdCard">
+                    <input type="radio" name="direction" value="forward" checked>
+                    <div class="option-icon">→</div>
+                    <div>
+                        <div class="option-title">UTM → Lat/Long</div>
+                        <div class="option-desc">Project UTM coordinates to WGS84</div>
+                    </div>
+                </label>
+                <label class="option-card" id="dirRevCard">
+                    <input type="radio" name="direction" value="reverse">
+                    <div class="option-icon">←</div>
+                    <div>
+                        <div class="option-title">Lat/Long → UTM</div>
+                        <div class="option-desc">Project WGS84 to UTM zone</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- 2. INPUT CRS (KML only, hidden by default) -->
+        <div class="section-card" id="kmlCrsBox" style="display:none">
+            <div class="section-header">
+                <div class="section-title-row">
+                    <div class="section-badge">3</div>
+                    <div class="section-name">Input Coordinate System</div>
+                </div>
+                <div class="section-hint">What CRS is your DXF using?</div>
+            </div>
+            <div class="option-row">
+                <label class="option-card selected" id="crsUtmCard">
+                    <input type="radio" name="input_crs" value="utm" checked>
+                    <div class="option-icon">📍</div>
+                    <div>
+                        <div class="option-title" id="kmlUtmLabel">UTM Zone 42N</div>
+                        <div class="option-desc">Metric projected coordinates</div>
+                    </div>
+                </label>
+                <label class="option-card" id="crsLatCard">
+                    <input type="radio" name="input_crs" value="latlong">
+                    <div class="option-icon">🌐</div>
+                    <div>
+                        <div class="option-title">Lat/Long (WGS84)</div>
+                        <div class="option-desc">Already in geographic coordinates</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        </div><!-- end cards-row -->
+
+        <!-- 3. UTM ZONE -->
+        <div class="section-card" id="utmZoneCard">
+            <div class="section-header">
+                <div class="section-title-row">
+                    <div class="section-badge">3</div>
+                    <div class="section-name">UTM Zone</div>
+                </div>
+                <div class="section-hint">Zones 1–60, N/S hemisphere</div>
+            </div>
+            <div class="utm-row">
+                <div class="utm-label-group">
+                    <div class="utm-label">Zone Number</div>
+                    <div class="utm-hint">UTM Zones 1–60</div>
+                </div>
+                <select class="utm-select" id="utmZoneNumber"></select>
+                <div class="hemi-toggle">
+                    <button class="hemi-btn active" id="hemiN" onclick="setHemi('N')">N (Northern)</button>
+                    <button class="hemi-btn" id="hemiS" onclick="setHemi('S')">S (Southern)</button>
                 </div>
             </div>
-
-            <!-- Progress -->
-            <div class="progress-bar" id="progressBar">
-                <div class="progress-fill"></div>
+            <div class="epsg-row" id="epsgRow">
+                Selected: <span class="epsg-val" id="epsgFrom">EPSG:32642</span>
+                (UTM Zone 42N) → <span class="epsg-val">EPSG:4326</span> (WGS84)
             </div>
-
-            <!-- Message -->
-            <div class="message" id="message"></div>
-
-            <!-- Buttons -->
-            <div class="button-group">
-                <button class="btn-convert" id="convertBtn" disabled>Convert</button>
-                <button class="btn-clear" id="clearBtn">Clear</button>
-            </div>
-
         </div>
+
+        <!-- 4. UPLOAD FILE -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-title-row">
+                    <div class="section-badge">4</div>
+                    <div class="section-name">Upload File</div>
+                </div>
+                <div class="section-hint">.dxf · up to 50 MB</div>
+            </div>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-cloud">☁️</div>
+                <div class="upload-title">Click or drag a DXF file here</div>
+                <div class="upload-sub">Maximum file size: 50 MB</div>
+                <div class="upload-ext">.DXF ONLY</div>
+            </div>
+            <input type="file" id="fileInput" accept=".dxf">
+            <div class="file-info" id="fileInfo">
+                <div>
+                    <div class="file-name" id="fileName"></div>
+                    <div class="file-size" id="fileSize"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-bar" id="progressBar"><div class="progress-fill"></div></div>
+        <div class="message" id="message"></div>
+
+    </div><!-- end right-content -->
+
+    <!-- ACTION BAR -->
+    <div class="action-bar">
+        <button class="btn-convert" id="convertBtn" disabled>▶ Convert</button>
+        <button class="btn-clear" id="clearBtn">◇ Clear</button>
     </div>
+</div><!-- end right-panel -->
 
-    <script>
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        const fileSize = document.getElementById('fileSize');
-        const convertBtn = document.getElementById('convertBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const message = document.getElementById('message');
-        const progressBar = document.getElementById('progressBar');
-        const directionBox = document.getElementById('directionBox');
-        const kmlCrsBox = document.getElementById('kmlCrsBox');
-        const utmZoneNumber = document.getElementById('utmZoneNumber');
-        const epsgCode = document.getElementById('epsgCode');
-        const epsgPreview = document.getElementById('epsgPreview');
-        let selectedFile = null;
+<script>
+    // ── State
+    let selectedFile = null;
+    let hemisphere = 'N';
 
-        // Populate zone dropdown 1–60, default 42
-        for (let i = 1; i <= 60; i++) {
-            const opt = document.createElement('option');
-            opt.value = i;
-            opt.textContent = `Zone ${i}`;
-            if (i === 42) opt.selected = true;
-            utmZoneNumber.appendChild(opt);
-        }
+    // ── DOM refs
+    const uploadArea   = document.getElementById('uploadArea');
+    const fileInput    = document.getElementById('fileInput');
+    const fileInfo     = document.getElementById('fileInfo');
+    const fileName     = document.getElementById('fileName');
+    const fileSize     = document.getElementById('fileSize');
+    const convertBtn   = document.getElementById('convertBtn');
+    const clearBtn     = document.getElementById('clearBtn');
+    const messageEl    = document.getElementById('message');
+    const progressBar  = document.getElementById('progressBar');
+    const directionBox = document.getElementById('directionBox');
+    const kmlCrsBox    = document.getElementById('kmlCrsBox');
+    const utmZoneNum   = document.getElementById('utmZoneNumber');
 
-        function getUtmZone() {
-            const zone = utmZoneNumber.value;
-            const hemi = document.querySelector('input[name="hemisphere"]:checked').value;
-            return `${zone}${hemi}`;
-        }
+    // ── Populate zone dropdown
+    for (let i = 1; i <= 60; i++) {
+        const o = document.createElement('option');
+        o.value = i; o.textContent = `Zone ${i}`;
+        if (i === 42) o.selected = true;
+        utmZoneNum.appendChild(o);
+    }
 
-        function updateEpsgPreview() {
-            const zone = parseInt(utmZoneNumber.value);
-            const hemi = document.querySelector('input[name="hemisphere"]:checked').value;
-            const epsgNum = hemi === 'N' ? 32600 + zone : 32700 + zone;
-            const code = `EPSG:${epsgNum}`;
-            const label = `UTM Zone ${zone}${hemi}`;
+    // ── Hemisphere toggle
+    function setHemi(h) {
+        hemisphere = h;
+        document.getElementById('hemiN').classList.toggle('active', h === 'N');
+        document.getElementById('hemiS').classList.toggle('active', h === 'S');
+        updateEpsg();
+    }
 
-            epsgPreview.innerHTML = `Selected: <span>${code}</span> (${label}) ↔ EPSG:4326 (WGS84)`;
-            document.getElementById('kmlUtmLabel').textContent = label;
-        }
+    // ── EPSG preview
+    function getUtmZone() { return `${utmZoneNum.value}${hemisphere}`; }
 
-        utmZoneNumber.addEventListener('change', updateEpsgPreview);
-        document.querySelectorAll('input[name="hemisphere"]').forEach(r => r.addEventListener('change', updateEpsgPreview));
+    function updateEpsg() {
+        const zone = parseInt(utmZoneNum.value);
+        const epsgNum = hemisphere === 'N' ? 32600 + zone : 32700 + zone;
+        const code = `EPSG:${epsgNum}`;
+        const label = `UTM Zone ${zone}${hemisphere}`;
+        document.getElementById('epsgFrom').textContent = code;
+        document.getElementById('epsgRow').innerHTML =
+            `Selected: <span class="epsg-val">${code}</span> (${label}) → <span class="epsg-val">EPSG:4326</span> (WGS84)`;
+        document.getElementById('kmlUtmLabel').textContent = label;
+    }
 
-        document.querySelectorAll('input[name="output_format"]').forEach(input => {
-            input.addEventListener('change', () => {
-                const isKml = input.value === 'kml';
-                directionBox.style.display = isKml ? 'none' : 'block';
-                kmlCrsBox.style.display = isKml ? 'block' : 'none';
+    utmZoneNum.addEventListener('change', updateEpsg);
+
+    // ── Output format toggle
+    function syncOptionCard(name, cards) {
+        document.querySelectorAll(`input[name="${name}"]`).forEach((r, i) => {
+            r.addEventListener('change', () => {
+                cards.forEach(c => c.classList.remove('selected'));
+                r.closest('.option-card').classList.add('selected');
             });
         });
+    }
 
-        uploadArea.addEventListener('click', () => fileInput.click());
+    syncOptionCard('output_format', [document.getElementById('fmtDxfCard'), document.getElementById('fmtKmlCard')]);
+    syncOptionCard('direction',     [document.getElementById('dirFwdCard'), document.getElementById('dirRevCard')]);
+    syncOptionCard('input_crs',     [document.getElementById('crsUtmCard'), document.getElementById('crsLatCard')]);
 
-        fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
-
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            uploadArea.classList.add('dragover');
+    document.querySelectorAll('input[name="output_format"]').forEach(r => {
+        r.addEventListener('change', () => {
+            const isKml = r.value === 'kml';
+            directionBox.style.display = isKml ? 'none' : 'block';
+            kmlCrsBox.style.display    = isKml ? 'block' : 'none';
         });
+    });
 
-        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    // ── Upload
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', e => { e.preventDefault(); uploadArea.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); });
 
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            uploadArea.classList.remove('dragover');
-            handleFileSelect(e.dataTransfer.files[0]);
-        });
-
-        function handleFileSelect(file) {
-            if (!file) return;
-            if (file.name.toLowerCase().endsWith('.dxf')) {
-                selectedFile = file;
-                fileName.textContent = `📄 ${file.name}`;
-                fileSize.textContent = `Size: ${(file.size / 1024).toFixed(2)} KB`;
-                fileInfo.classList.add('show');
-                convertBtn.disabled = false;
-                hideMessage();
-            } else {
-                showMessage('Please select a valid DXF file.', 'error');
-                selectedFile = null;
-                fileInfo.classList.remove('show');
-                convertBtn.disabled = true;
-            }
-        }
-
-        convertBtn.addEventListener('click', async () => {
-            if (!selectedFile) return;
-
-            const outputFormat = document.querySelector('input[name="output_format"]:checked').value;
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-            formData.append('utm_zone', getUtmZone());
-
-            let apiUrl, loadingText;
-            if (outputFormat === 'kml') {
-                const inputCrs = document.querySelector('input[name="input_crs"]:checked').value;
-                formData.append('input_crs', inputCrs);
-                apiUrl = '/api/convert-to-kml';
-                loadingText = 'Exporting KML...';
-            } else {
-                const selectedDirection = document.querySelector('input[name="direction"]:checked').value;
-                formData.append('direction', selectedDirection);
-                apiUrl = '/api/convert';
-                loadingText = selectedDirection === 'reverse' ? 'Reversing...' : 'Converting...';
-            }
-
-            convertBtn.disabled = true;
-            convertBtn.classList.add('loading');
-            convertBtn.textContent = loadingText;
-            progressBar.classList.add('show');
-
-            try {
-                const response = await fetch(apiUrl, { method: 'POST', body: formData });
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    showMessage(
-                        `✓ ${data.message}<br><a href="${data.download_url}" class="download-link" download="${data.output_file}">⬇️ Download ${outputFormat.toUpperCase()} File</a>`,
-                        'success'
-                    );
-                } else {
-                    showMessage(data.message || 'Conversion failed', 'error');
-                }
-            } catch (error) {
-                showMessage(`Error: ${error.message}`, 'error');
-            } finally {
-                convertBtn.disabled = false;
-                convertBtn.classList.remove('loading');
-                convertBtn.textContent = 'Convert';
-                progressBar.classList.remove('show');
-            }
-        });
-
-        clearBtn.addEventListener('click', () => {
+    function handleFile(file) {
+        if (!file) return;
+        if (file.name.toLowerCase().endsWith('.dxf')) {
+            selectedFile = file;
+            fileName.textContent = `📄 ${file.name}`;
+            fileSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+            fileInfo.classList.add('show');
+            convertBtn.disabled = false;
+            hideMsg();
+        } else {
+            showMsg('Please select a valid .DXF file.', 'error');
             selectedFile = null;
-            fileInput.value = '';
             fileInfo.classList.remove('show');
             convertBtn.disabled = true;
-            hideMessage();
+        }
+    }
+
+    // ── Convert
+    convertBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+        const fmt = document.querySelector('input[name="output_format"]:checked').value;
+        const fd = new FormData();
+        fd.append('file', selectedFile);
+        fd.append('utm_zone', getUtmZone());
+
+        let url, label;
+        if (fmt === 'kml') {
+            const crs = document.querySelector('input[name="input_crs"]:checked').value;
+            fd.append('input_crs', crs);
+            url = '/api/convert-to-kml'; label = 'Exporting KML…';
+        } else {
+            const dir = document.querySelector('input[name="direction"]:checked').value;
+            fd.append('direction', dir);
+            url = '/api/convert'; label = dir === 'reverse' ? 'Reversing…' : 'Converting…';
+        }
+
+        convertBtn.disabled = true;
+        convertBtn.textContent = label;
+        progressBar.classList.add('show');
+
+        try {
+            const res = await fetch(url, { method: 'POST', body: fd });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                showMsg(`✓ ${data.message}<br><a href="${data.download_url}" class="download-link" download="${data.output_file}">⬇ Download ${fmt.toUpperCase()} File</a>`, 'success');
+            } else {
+                showMsg(data.message || 'Conversion failed.', 'error');
+            }
+        } catch (e) {
+            showMsg(`Error: ${e.message}`, 'error');
+        } finally {
+            convertBtn.disabled = false;
+            convertBtn.textContent = '▶ Convert';
             progressBar.classList.remove('show');
-        });
-
-        function showMessage(text, type) {
-            message.innerHTML = text;
-            message.className = `message show ${type}`;
         }
+    });
 
-        function hideMessage() {
-            message.classList.remove('show');
-        }
-    </script>
+    // ── Clear
+    clearBtn.addEventListener('click', () => {
+        selectedFile = null;
+        fileInput.value = '';
+        fileInfo.classList.remove('show');
+        convertBtn.disabled = true;
+        hideMsg();
+        progressBar.classList.remove('show');
+    });
+
+    function showMsg(text, type) { messageEl.innerHTML = text; messageEl.className = `message show ${type}`; }
+    function hideMsg()           { messageEl.className = 'message'; }
+</script>
 </body>
 </html>
