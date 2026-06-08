@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DXF Coordinate Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .info-box strong {
+            color: #333;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f9faff;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f4ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ecff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-area p {
+            color: #666;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .upload-area .hint {
+            font-size: 13px;
+            color: #999;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-info {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-name {
+            color: #333;
+            font-weight: 600;
+            word-break: break-all;
+            margin-bottom: 5px;
+        }
+
+        .file-size {
+            color: #999;
+            font-size: 13px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .direction-box {
+            background: #f9faff;
+            border: 1px solid #d9e2ff;
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+        }
+
+        .direction-title {
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .direction-options {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .direction-options label {
+            color: #555;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-convert {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-convert:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-convert:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-clear {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-clear:hover {
+            background: #d0d0d0;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .download-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            margin-top: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .download-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-convert.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-bottom: 20px;
+            display: none;
+            overflow: hidden;
+        }
+
+        .progress-bar.show {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+            animation: progress 2s ease-in-out infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .supported-entities {
+            background: #f9faff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .supported-entities strong {
+            color: #333;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .entities-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+        }
+
+        .entity-tag {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #555;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .upload-area {
+                padding: 30px 15px;
+            }
+
+            .upload-icon {
+                font-size: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ DXF Coordinate Converter</h1>
+        <p class="subtitle">Convert DXF coordinates between UTM Zone 42N and WGS84</p>
+
+        <div class="info-box">
+            <strong>DXF Forward:</strong> UTM Zone 42N (EPSG:32642) → WGS84 (EPSG:4326)<br>
+            <strong>DXF Reverse:</strong> WGS84 (EPSG:4326) → UTM Zone 42N (EPSG:32642)<br>
+            <strong>KML Export:</strong> DXF or DWG (UTM or Lat/Long) → KML for Google Earth<br>
+            <strong>DWG Support:</strong> Requires AutoCAD or BricsCAD installed on the server<br>
+            <strong>Precision:</strong> 8 decimal places
+        </div>
+
+        <div class="direction-box">
+            <div class="direction-title">Output Format</div>
+            <div class="direction-options">
+                <label>
+                    <input type="radio" name="output_format" value="dxf" checked>
+                    DXF
+                </label>
+                <label>
+                    <input type="radio" name="output_format" value="kml">
+                    KML (Google Earth)
+                </label>
+            </div>
+        </div>
+
+        <div class="direction-box" id="directionBox">
+            <div class="direction-title">Conversion Direction</div>
+            <div class="direction-options">
+                <label>
+                    <input type="radio" name="direction" value="forward" checked>
+                    UTM to Lat/Long
+                </label>
+                <label>
+                    <input type="radio" name="direction" value="reverse">
+                    Lat/Long to UTM
+                </label>
+            </div>
+        </div>
+
+        <div class="direction-box" id="kmlCrsBox" style="display:none">
+            <div class="direction-title">Input Coordinate System</div>
+            <div class="direction-options">
+                <label>
+                    <input type="radio" name="input_crs" value="utm" checked>
+                    UTM Zone 42N
+                </label>
+                <label>
+                    <input type="radio" name="input_crs" value="latlong">
+                    Lat/Long (WGS84)
+                </label>
+            </div>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📄</div>
+            <p>Click or drag a DXF or DWG file here</p>
+            <p class="hint">Maximum file size: 50MB</p>
+        </div>
+
+        <input type="file" id="fileInput" accept=".dxf,.dwg">
+
+        <div class="file-info" id="fileInfo">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-size" id="fileSize"></div>
+        </div>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill"></div>
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <div class="button-group">
+            <button class="btn-convert" id="convertBtn" disabled>Convert</button>
+            <button class="btn-clear" id="clearBtn">Clear</button>
+        </div>
+
+        <div class="supported-entities">
+            <strong>✓ Supported Entity Types:</strong>
+            <div class="entities-list">
+                <div class="entity-tag">POINT</div>
+                <div class="entity-tag">TEXT</div>
+                <div class="entity-tag">LINE</div>
+                <div class="entity-tag">LWPOLYLINE</div>
+                <div class="entity-tag">POLYLINE</div>
+                <div class="entity-tag">CIRCLE</div>
+                <div class="entity-tag">ARC</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const convertBtn = document.getElementById('convertBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const message = document.getElementById('message');
+        const progressBar = document.getElementById('progressBar');
+        const directionBox = document.getElementById('directionBox');
+        const kmlCrsBox = document.getElementById('kmlCrsBox');
+        let selectedFile = null;
+
+        document.querySelectorAll('input[name="output_format"]').forEach(input => {
+            input.addEventListener('change', () => {
+                const isKml = input.value === 'kml';
+                directionBox.style.display = isKml ? 'none' : 'block';
+                kmlCrsBox.style.display = isKml ? 'block' : 'none';
+            });
+        });
+
+        // Upload area click
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            handleFileSelect(e.target.files[0]);
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('dragover');
+            handleFileSelect(e.dataTransfer.files[0]);
+        });
+
+        function handleFileSelect(file) {
+            if (!file) return;
+
+            const nameLower = file.name.toLowerCase();
+            const isDxf = nameLower.endsWith('.dxf');
+            const isDwg = nameLower.endsWith('.dwg');
+
+            if (isDxf || isDwg) {
+                selectedFile = file;
+                fileName.textContent = `${isDwg ? '📐' : '📄'} ${file.name}`;
+                fileSize.textContent = `Size: ${(file.size / 1024).toFixed(2)} KB`;
+                fileInfo.classList.add('show');
+                convertBtn.disabled = false;
+                hideMessage();
+
+                if (isDwg) {
+                    showMessage(
+                        'DWG file selected. DWG files can only be exported to KML. ' +
+                        'AutoCAD or BricsCAD must be installed on the server.',
+                        'info'
+                    );
+                    const kmlRadio = document.querySelector('input[name="output_format"][value="kml"]');
+                    if (kmlRadio) { kmlRadio.checked = true; kmlRadio.dispatchEvent(new Event('change')); }
+                }
+            } else {
+                showMessage('Please select a valid DXF or DWG file.', 'error');
+                selectedFile = null;
+                fileInfo.classList.remove('show');
+                convertBtn.disabled = true;
+            }
+        }
+
+        convertBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            const outputFormat = document.querySelector('input[name="output_format"]:checked').value;
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            let apiUrl, loadingText;
+            if (outputFormat === 'kml') {
+                const inputCrs = document.querySelector('input[name="input_crs"]:checked').value;
+                formData.append('input_crs', inputCrs);
+                apiUrl = '/api/convert-to-kml';
+                loadingText = 'Exporting KML...';
+            } else {
+                const selectedDirection = document.querySelector('input[name="direction"]:checked').value;
+                formData.append('direction', selectedDirection);
+                apiUrl = '/api/convert';
+                loadingText = selectedDirection === 'reverse' ? 'Reversing...' : 'Converting...';
+            }
+
+            convertBtn.disabled = true;
+            convertBtn.classList.add('loading');
+            convertBtn.textContent = loadingText;
+            progressBar.classList.add('show');
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showMessage(
+                        `✓ ${data.message}<br><a href="${data.download_url}" class="download-link" download="${data.output_file}">⬇️ Download ${outputFormat.toUpperCase()} File</a>`,
+                        'success'
+                    );
+                } else {
+                    showMessage(data.message || 'Conversion failed', 'error');
+                }
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            } finally {
+                convertBtn.disabled = false;
+                convertBtn.classList.remove('loading');
+                convertBtn.textContent = 'Convert';
+                progressBar.classList.remove('show');
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('show');
+            convertBtn.disabled = true;
+            hideMessage();
+            progressBar.classList.remove('show');
+        });
+
+        function showMessage(text, type) {
+            message.innerHTML = text;
+            message.className = `message show ${type}`;
+        }
+
+        function hideMessage() {
+            message.classList.remove('show');
+        }
+    </script>
+</body>
+</html>
